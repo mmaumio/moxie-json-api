@@ -1,0 +1,12 @@
+/* Custom css style for plugin*/
+
+.movie-cpt {
+	margin-bottom: 40px;
+    border: 1px solid #ECECEC;
+    border-radius: 2px;
+    padding: 20px;
+}
+
+.movie-cpt .poster-img {
+	width: 50%;
+}
