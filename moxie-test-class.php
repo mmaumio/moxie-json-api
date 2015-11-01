@@ -23,7 +23,8 @@ if ( ! class_exists('Moxie_Test') ) {
 			add_action( 'init', array($this, 'moxie_rewrite_rule') );
 			add_action( 'plugins_loaded', array($this, 'moxie_load_textdomain') );
 			register_activation_hook( __FILE__, 'moxie_plugin_flush_rule' );
-			add_action( 'wp_enqueue_scripts', array($this, 'moxie_enqueue_styles') );
+			add_action( 'wp_enqueue_scripts', array($this, 'moxie_enqueue_scripts') );
+			add_action( 'admin_enqueue_scripts', array($this, 'admin_enqueue_scripts') );
 			add_action( 'add_meta_boxes', array($this, 'movie_add_meta_box') );
 			add_action( 'save_post', array($this, 'movie_meta_save') );
 			add_action( 'save_post', array($this, 'flush_cache_update') );
@@ -32,16 +33,27 @@ if ( ! class_exists('Moxie_Test') ) {
 		}
 
 		/**
-		* Enqueue plugin stylesheet
+		* Enqueue plugin stylesheet and javascript
 		*
 		*/
-		public function moxie_enqueue_styles() {
-			wp_enqueue_style( 'main-css', plugins_url( 'main.css', __FILE__ ), array(), '1.0', 'all' );
+		public function moxie_enqueue_scripts() {
+			wp_enqueue_style( 'animate-css', plugins_url( 'assets/css/animate.css', __FILE__ ), array(), '1.0', 'all' );
+			wp_enqueue_style( 'main-css', plugins_url( 'assets/css/main.css', __FILE__ ), array(), '1.0', 'all' );
+		    wp_enqueue_script( 'wow-js', plugins_url('assets/js/wow.min.js', __FILE__ ), array('jquery'), true );
+		    wp_enqueue_script( 'main-js', plugins_url('assets/js/main.js', __FILE__ ), array('jquery'), true );
+		}
+
+		/**
+		* Enqueue admin stylesheet and javascript
+		*
+		*/
+		public function admin_enqueue_scripts() {
+			wp_enqueue_style('thickbox');
 			wp_enqueue_script('media-upload');
 		    wp_enqueue_script('thickbox');
-		    wp_register_script('my-upload', plugins_url('my-script.js', __FILE__ ), array('jquery','media-upload','thickbox') );
-		    wp_enqueue_script('my-upload');
+		    wp_enqueue_script( 'admin-js', plugins_url('assets/js/admin.js', __FILE__ ), array('jquery', 'media-upload', 'thickbox'), true );
 		}
+
 
 
 		/**
@@ -177,11 +189,13 @@ if ( ! class_exists('Moxie_Test') ) {
 			wp_nonce_field( '_movie_information_nonce', 'movie_information_nonce' ); ?>
 
 			<p>
-				<label for="poster_url"><?php _e( 'Poster URL', 'wpmoxie' ); ?></label><br>
-				<input type="text" name="poster_url" id="poster_url" class="widefat" value="<?php echo $this->moxie_get_meta( 'poster_url' ); ?>">
+				<label for="poster_url"><?php _e( 'Poster URL', 'wpmoxie' ); ?></label><br/>
+				<input id="upload_image" type="text" size="72" name="poster_url" value="<?php echo $this->moxie_get_meta( 'poster_url' ); ?>" /><br/>
+				<br/>
+				<input id="upload_image_button" class="button button-primary button-large" type="button" value="Upload Image" />
 			</p>
 			<p>
-				<label for="rating"><?php _e( 'Rating', 'wpmoxie' ); ?></label><br>
+				<label for="rating"><?php _e( 'Rating', 'wpmoxie' ); ?></label><br/>
 				<select name="rating" id="rating">
 					<option <?php echo ($this->moxie_get_meta( 'rating' ) === '1' ) ? 'selected' : '' ?>>1</option>
 					<option <?php echo ($this->moxie_get_meta( 'rating' ) === '2' ) ? 'selected' : '' ?>>2</option>
@@ -191,12 +205,12 @@ if ( ! class_exists('Moxie_Test') ) {
 				</select>
 			</p>	
 			<p>
-				<label for="year"><?php _e( 'Year', 'wpmoxie' ); ?></label><br>
-				<input type="text" name="year" id="year" class="widefat" value="<?php echo $this->moxie_get_meta( 'year' ); ?>">
+				<label for="year"><?php _e( 'Year', 'wpmoxie' ); ?></label><br/>
+				<input type="text" name="year" id="year" size="72" value="<?php echo $this->moxie_get_meta( 'year' ); ?>">
 			</p>		
 			<p>
-				<label for="description"><?php _e( 'Description', 'wpmoxie' ); ?></label><br>
-				<textarea name="description" id="description" class="widefat" row="20"><?php echo $this->moxie_get_meta( 'description' ); ?></textarea>
+				<label for="description"><?php _e( 'Description', 'wpmoxie' ); ?></label><br/>
+				<textarea name="description" id="description" cols="72" rows="10"><?php echo $this->moxie_get_meta( 'description' ); ?></textarea>
 			</p><?php
 		}
 
@@ -304,7 +318,7 @@ if ( ! class_exists('Moxie_Test') ) {
 		    endwhile; 
 		    wp_reset_postdata(); 
 		    endif;
-		 	//header('Content-Type: application/json');
+		 	header('Content-Type: application/json');
 		    wp_send_json( $movie_data );
 		 
 		}
@@ -369,12 +383,12 @@ if ( ! class_exists('Moxie_Test') ) {
 				if ( !empty($data) ) {
 					$i = 0;
 					foreach ($data as $total ) {
-						$output .= '<div class="col-md-12 movie-cpt">';
-						$output .= '<h2>' . $total['title'] . '</h2>';
-						$output .= '<p><img class="poster-img" src="' . $total['poster_url'] . '" /></p>';
-						$output .= '<p><strong>Rating</strong>: ' . $total['rating'] . '</p>';
-						$output .= '<p><strong>Year</strong>: ' . $total['year'] . '</p>';
-						$output .= '<p><strong>Description</strong>: ' . $total['short_description'] . '</p>';
+						$output .= '<div class="col-md-12 movie-cpt wow">';
+						$output .= '<h2 class="wow slideInLeft" data-wow-duration="1.5s" data-wow-delay=".4s" data-wow-offset="10">' . $total['title'] . '</h2>';
+						$output .= '<p class="wow slideInLeft" data-wow-duration="1.5s" data-wow-delay=".5s"><img class="poster-img" src="' . $total['poster_url'] . '" /></p>';
+						$output .= '<p class="wow slideInLeft" data-wow-duration="1.5s" data-wow-delay=".6s"><strong>Rating</strong>: ' . $total['rating'] . '</p>';
+						$output .= '<p class="wow slideInLeft" data-wow-duration="1.5s" data-wow-delay=".7s"><strong>Year</strong>: ' . $total['year'] . '</p>';
+						$output .= '<p class="wow slideInLeft" data-wow-duration="1.5s" data-wow-delay=".8s"><strong>Description</strong>: ' . $total['short_description'] . '</p>';
 						$output .= '</div>';
 					}
 				} else {
